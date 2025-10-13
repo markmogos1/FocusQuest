@@ -30,6 +30,13 @@ const Home: React.FC = () => {
             Explore the world of Gamified Todos! →
           </button>
 
+          <button 
+            onClick={() => navigate('/about')}
+            className="bg-white text-amber-900 hover:bg-amber-800 hover:text-white transition-all px-8 py-4 rounded-full text-xl font-semibold shadow-lg cursor-pointer"
+          >
+            Learn more about us! →
+          </button>
+
       </div>
     </section>
   );
