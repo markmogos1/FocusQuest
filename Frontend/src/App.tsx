@@ -4,6 +4,7 @@ import Home from './Pages/Home'
 import TaskList from './Pages/TaskList'
 import About from './Pages/About'
 import Navbar from './Components/NavBar'
+import DailyQuestPage from './Pages/DailyQuest'
 
 function App() {
 
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<Home/>} />
         <Route path="/tasks" element={<TaskList/>} />
         <Route path='/about' element={<About/>} />
+        <Route path='/daily' element={<DailyQuestPage/>}/>
       </Routes>
       
     </BrowserRouter>
