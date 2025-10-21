@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* fonts */
+@layer utilities {
+  .font-pixel   { font-family: 'Press Start 2P', monospace; letter-spacing: 0.02em; }
+  .font-modern  { font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  .font-fantasy { font-family: 'Cinzel Decorative', serif; letter-spacing: 0.03em; }
+}
