@@ -6,6 +6,7 @@ import About from './Pages/About'
 import Navbar from './Components/NavBar'
 import DailyQuestPage from './Pages/DailyQuest'
 import TestTablePage from './Pages/TestDatabaseTable'
+import AuthPage from './Pages/AuthPage'
 
 function App() {
 
@@ -20,6 +21,8 @@ function App() {
         <Route path='/about' element={<About/>} />
         <Route path='/daily' element={<DailyQuestPage/>}/>
         <Route path='/test-table' element={<TestTablePage/>}/>
+        <Route path='/auth' element={<AuthPage/>}/>
+
       </Routes>
       
     </BrowserRouter>
