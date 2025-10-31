@@ -1,41 +1,162 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
 
 interface Task {
-  id: number;
-  text: string;
-  completed: boolean;
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  completed_at: string | null;
+  difficulty: number | null;
+  notes: string | null;
+  rewards: string | null;
+  created_at: string;
 }
 
 const TaskList: React.FC = () => {
   const navigate = useNavigate();
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: 1, text: "Complete project proposal", completed: false },
-    { id: 2, text: "Review team feedback", completed: true },
-    { id: 3, text: "Update documentation", completed: false },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
-  const addTask = () => {
-    if (newTask.trim()) {
-      const task: Task = {
-        id: Date.now(),
-        text: newTask.trim(),
-        completed: false,
-      };
-      setTasks([...tasks, task]);
+  // Load user and fetch tasks on mount
+  useEffect(() => {
+    let isFetching = false;
+
+    // Fetch tasks from Supabase
+    const fetchTasks = async () => {
+      if (isFetching) return;
+
+      isFetching = true;
+      setLoading(true);
+      setError(null);
+
+      try {
+        const { data, error } = await supabase
+          .from("taskitem")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching tasks:", error);
+          setError("Failed to load tasks");
+          setTasks([]);
+        } else {
+          setTasks(data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching tasks:", err);
+        setError("Failed to load tasks");
+        setTasks([]);
+      } finally {
+        setLoading(false);
+        isFetching = false;
+      }
+    };
+
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event: string, session: any) => {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+
+        if (currentUser) {
+          // Only fetch on INITIAL_SESSION - this is the reliable event that fires with session data
+          if (event === 'INITIAL_SESSION') {
+            await fetchTasks();
+          }
+        } else {
+          // User is not signed in
+          setTasks([]);
+          setLoading(false);
+          if (event !== 'INITIAL_SESSION') {
+            setError("Please sign in to view your tasks");
+          }
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Add a new task
+  const addTask = async () => {
+    if (!newTask.trim()) return;
+    if (!user) {
+      setError("Please sign in to add tasks");
+      return;
+    }
+
+    setError(null);
+
+    const { data, error } = await supabase
+      .from("taskitem")
+      .insert([
+        {
+          user_id: user.id,
+          name: newTask.trim(),
+          completed_at: null,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error adding task:", error);
+      setError("Failed to add task");
+    } else {
+      setTasks([data, ...tasks]);
       setNewTask("");
     }
   };
 
-  const toggleTask = (id: number) => {
-    setTasks(tasks.map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+  // Toggle task completion
+  const toggleTask = async (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+
+    setError(null);
+
+    // Toggle: if completed_at is null, set to now; if set, set to null
+    const newCompletedAt = task.completed_at ? null : new Date().toISOString();
+
+    const { error } = await supabase
+      .from("taskitem")
+      .update({ completed_at: newCompletedAt })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating task:", error);
+      setError("Failed to update task");
+    } else {
+      setTasks(
+        tasks.map((t) =>
+          t.id === id ? { ...t, completed_at: newCompletedAt } : t
+        )
+      );
+    }
   };
 
-  const deleteTask = (id: number) => {
-    setTasks(tasks.filter(task => task.id !== id));
+  // Delete a task
+  const deleteTask = async (id: string) => {
+    setError(null);
+
+    const { error } = await supabase
+      .from("taskitem")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting task:", error);
+      setError("Failed to delete task");
+    } else {
+      setTasks(tasks.filter((t) => t.id !== id));
+    }
   };
 
   return (
@@ -51,13 +172,28 @@ const TaskList: React.FC = () => {
           Task List
         </h1>
 
+        {/* Error Message */}
+        {error && (
+          <div className="w-full max-w-2xl rounded-2xl bg-red-100 border border-red-300 text-red-800 px-6 py-4 shadow-lg">
+            <p className="font-semibold">{error}</p>
+            {!user && (
+              <button
+                onClick={() => navigate('/auth')}
+                className="mt-2 text-sm underline hover:no-underline"
+              >
+                Go to Sign In
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Add Task Input */}
         <div className="flex gap-4 w-full max-w-md">
           <input
             type="text"
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && addTask()}
+            onKeyDown={(e) => e.key === 'Enter' && addTask()}
             placeholder="Add a new task..."
             className="flex-1 px-4 py-3 rounded-full text-lg border-0 outline-none shadow-lg text-gray-800 placeholder-gray-500"
           />
@@ -71,7 +207,11 @@ const TaskList: React.FC = () => {
 
         {/* Task List */}
         <div className="w-full max-w-2xl space-y-4">
-          {tasks.length === 0 ? (
+          {loading ? (
+            <p className="text-lg text-gray-700 py-8">
+              Loading tasks...
+            </p>
+          ) : tasks.length === 0 ? (
             <p className="text-lg text-gray-700 py-8">
               No tasks yet. Add one above to get started!
             </p>
@@ -80,24 +220,24 @@ const TaskList: React.FC = () => {
               <div
                 key={task.id}
                 className={`bg-white rounded-2xl p-6 shadow-lg transition-all hover:shadow-xl ${
-                  task.completed ? 'opacity-75' : ''
+                  task.completed_at ? 'opacity-75' : ''
                 }`}
               >
                 <div className="flex items-center gap-4">
                   <input
                     type="checkbox"
-                    checked={task.completed}
+                    checked={!!task.completed_at}
                     onChange={() => toggleTask(task.id)}
                     className="w-6 h-6 text-amber-600 rounded border-2 border-gray-300 focus:ring-amber-500"
                   />
                   <span
                     className={`flex-1 text-left text-lg ${
-                      task.completed
+                      task.completed_at
                         ? 'line-through text-gray-500'
                         : 'text-gray-800'
                     }`}
                   >
-                    {task.text}
+                    {task.name}
                   </span>
                   <button
                     onClick={() => deleteTask(task.id)}
@@ -114,8 +254,8 @@ const TaskList: React.FC = () => {
         {/* Stats */}
         <div className="flex gap-8 text-lg text-gray-700">
           <span>Total: {tasks.length}</span>
-          <span>Completed: {tasks.filter(t => t.completed).length}</span>
-          <span>Remaining: {tasks.filter(t => !t.completed).length}</span>
+          <span>Completed: {tasks.filter(t => t.completed_at).length}</span>
+          <span>Remaining: {tasks.filter(t => !t.completed_at).length}</span>
         </div>
 
         {/* Navigation */}
