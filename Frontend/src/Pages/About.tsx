@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-
 const About: React.FC = () => {
     const navigate = useNavigate();
     return (
@@ -54,7 +53,7 @@ const About: React.FC = () => {
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="font-bold text-amber-800">-</span>
-                            <strong>Achievements:</strong> Unlock special badges for reaching milestones and completing difficult challenges.
+                            <strong>Daily Quests:</strong> Unlock special rewards for slaying the daily monster.
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="font-bold text-amber-800">-</span>

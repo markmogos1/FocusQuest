@@ -7,6 +7,7 @@ import Navbar from './Components/NavBar'
 import DailyQuestPage from './Pages/DailyQuest'
 import TestTablePage from './Pages/TestDatabaseTable'
 import AuthPage from './Pages/AuthPage'
+import CalendarComponent from './Pages/CalendarComponent'
 
 function App() {
 
@@ -22,6 +23,7 @@ function App() {
         <Route path='/daily' element={<DailyQuestPage/>}/>
         <Route path='/test-table' element={<TestTablePage/>}/>
         <Route path='/auth' element={<AuthPage/>}/>
+        <Route path='/calendar' element={<CalendarComponent/>}/>
 
       </Routes>
       
