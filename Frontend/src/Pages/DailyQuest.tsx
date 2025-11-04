@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import { addXp } from '../lib/xp';
+import { supabase } from '../lib/supabaseClient';
 
 // --- Types ---
 interface Quest {
@@ -8,6 +10,24 @@ interface Quest {
   completed?: boolean;
   dmg?: number; // damage dealt when completed
 }
+
+async function questComplete(questXp: number): Promise<void> {
+  try{
+    const {data, error} = await supabase.auth.getUser()
+
+    if (error || !data?.user){
+      throw new Error('User not logged in')
+    }
+
+    const userId = data.user.id
+
+    const newXp = await addXp(userId, questXp)
+
+    console.log('User now has ${newXp} XP!')
+     } catch (err) {
+    console.error('Failed to add XP:', (err as Error).message)
+    }
+  }
 
 // --- UI Primitives ---
 const Card: React.FC<React.PropsWithChildren<{ title?: string; className?: string }>> = ({ title, className, children }) => (
@@ -100,9 +120,12 @@ const DailyQuestPage: React.FC = () => {
   const hits = dailyQuests.filter(q => q.completed).length;
 
   // Handlers
-  const toggleDaily = (id: number) => setDailyQuests(qs => qs.map(q => q.id === id ? { ...q, completed: !q.completed } : q));
+  const toggleDaily = async(id: number) => 
+    {setDailyQuests(qs => qs.map(q => q.id === id ? { ...q, completed: !q.completed } : q))
+    
+  };
   const toggleGoal  = (id: number) => setTodayGoals(qs => qs.map(q => q.id === id ? { ...q, completed: !q.completed } : q));
-
+  
   return (
     <section className="min-h-dvh w-full bg-gradient-to-br from-green-200 via-amber-100 to-amber-300">
       {/* Header */}
