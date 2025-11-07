@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import { addXp } from '../lib/xp';
+import { supabase } from '../lib/supabaseClient';
 
 // --- Types ---
 interface Quest {
@@ -7,7 +9,26 @@ interface Quest {
   reward?: string;
   completed?: boolean;
   dmg?: number; // damage dealt when completed
+  xp: number; // XP reward for completing this quest
 }
+
+async function questComplete(questXp: number): Promise<void> {
+  try{
+    const {data, error} = await supabase.auth.getUser()
+
+    if (error || !data?.user){
+      throw new Error('User not logged in')
+    }
+
+    const userId = data.user.id
+
+    const newXp = await addXp(userId, questXp)
+
+    console.log(newXp)
+     } catch (err) {
+    console.error('Failed to add XP:', (err as Error).message)
+    }
+  }
 
 // --- UI Primitives ---
 const Card: React.FC<React.PropsWithChildren<{ title?: string; className?: string }>> = ({ title, className, children }) => (
@@ -25,7 +46,7 @@ const StatChip: React.FC<{ label: string; value: string | number }> = ({ label, 
 );
 
 // --- Battle ---
-const MonsterBattle: React.FC<{ maxHP: number; hp: number; hits: number; totalNodes: number; reward: string }>
+const MonsterBattle: React.FC<{ maxHP: number; hp: number; hits: number; totalNodes: number; reward: string; xp:number}>
 = ({ maxHP, hp, hits, totalNodes, reward }) => {
   const pct = Math.max(0, Math.min(100, (hp / maxHP) * 100));
   const nodes = Array.from({ length: totalNodes }, (_, i) => i);
@@ -80,14 +101,14 @@ const QuestToggle: React.FC<{ q: Quest; onToggle?: (id: number) => void }>
 const DailyQuestPage: React.FC = () => {
   // Static demo data (we'll wire to real data later)
   const [dailyQuests, setDailyQuests] = useState<Quest[]>([
-    { id: 1, title: "Drink 2L of water", reward: "+10 XP", dmg: 12, completed: false },
-    { id: 2, title: "10-minute stretch", reward: "+5 XP", dmg: 8, completed: true },
-    { id: 3, title: "Inbox to zero", reward: "+8 XP", dmg: 10, completed: false },
+    { id: 1, title: "Drink 2L of water", reward: "+10 XP", dmg: 12, completed: false, xp: 10 },
+    { id: 2, title: "10-minute stretch", reward: "+5 XP", dmg: 8, completed: true, xp: 5 },
+    { id: 3, title: "Inbox to zero", reward: "+8 XP", dmg: 10, completed: false, xp: 8},
   ]);
 
   const [todayGoals, setTodayGoals] = useState<Quest[]>([
-    { id: 101, title: "Finish homework set 5", reward: "+25 XP", completed: false },
-    { id: 102, title: "Ship ClassLinker PR #42", reward: "+20 XP", completed: false },
+    { id: 101, title: "Finish homework set 5", reward: "+25 XP", completed: false, xp: 25},
+    { id: 102, title: "Ship ClassLinker PR #42", reward: "+20 XP", completed: false, xp: 20},
   ]);
 
   // Player & Enemy stats (static for now)
@@ -100,9 +121,41 @@ const DailyQuestPage: React.FC = () => {
   const hits = dailyQuests.filter(q => q.completed).length;
 
   // Handlers
-  const toggleDaily = (id: number) => setDailyQuests(qs => qs.map(q => q.id === id ? { ...q, completed: !q.completed } : q));
-  const toggleGoal  = (id: number) => setTodayGoals(qs => qs.map(q => q.id === id ? { ...q, completed: !q.completed } : q));
+  const toggleDaily = async (id: number) => {
+    // Find the quest you're toggling so you can access its XP
+    const quest = dailyQuests.find(q => q.id === id);
+    if (!quest) return; // just in case
 
+    // Update state (flip completion)
+    setDailyQuests(qs =>
+      qs.map(q => q.id === id ? { ...q, completed: !q.completed } : q)
+    );
+
+    // Call XP function only if it was *just completed*
+    if (!quest.completed) {
+      await questComplete(quest.xp);
+    }
+  };
+  const toggleGoal = async (id: number) => {
+    // Find the goal first so we can read its XP before updating
+    const goal = todayGoals.find(q => q.id === id);
+    if (!goal) return; // safety guard
+
+    // Update completion state
+    setTodayGoals(qs =>
+      qs.map(q =>
+        q.id === id ? { ...q, completed: !q.completed } : q
+      )
+    );
+
+    // If goal was previously incomplete, award XP
+    if (!goal.completed) {
+      await questComplete(goal.xp);
+    }
+  };
+
+
+  
   return (
     <section className="min-h-dvh w-full bg-gradient-to-br from-green-200 via-amber-100 to-amber-300">
       {/* Header */}
@@ -144,7 +197,7 @@ const DailyQuestPage: React.FC = () => {
 
           {/* Top Right: Battle Arena */}
           <Card title="Battle Arena">
-            <MonsterBattle maxHP={ENEMY_MAX_HP} hp={enemyHP} hits={hits} totalNodes={5} reward={"Daily Chest: 50 XP + 1 Key"} />
+            <MonsterBattle maxHP={ENEMY_MAX_HP} hp={enemyHP} hits={hits} totalNodes={5} reward={"Daily Chest: 50 XP + 1 Key"} xp={50}/>
           </Card>
 
           {/* Bottom Left: Daily Quests */}
