@@ -23,7 +23,7 @@ const Navbar: React.FC = () => {
         >
           FocusQuest
         </span>
-
+      
         {/* Links */}
         <div className="hidden md:flex gap-x-8">
           {links.map((link) => (
