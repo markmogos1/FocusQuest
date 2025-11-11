@@ -9,6 +9,7 @@ import TestTablePage from './Pages/TestDatabaseTable'
 import AuthPage from './Pages/AuthPage'
 import CalendarComponent from './Pages/CalendarComponent'
 import Profile from './Pages/ProfilePage'
+import Shop from './Pages/Shop'
 
 function App() {
 
@@ -21,6 +22,7 @@ function App() {
           <Route path="/tasks" element={<TaskList/>} />
           <Route path='/about' element={<About/>} />
           <Route path='/daily' element={<DailyQuestPage/>}/>
+          <Route path='/shop' element={<Shop/>}/>
           <Route path='/test-table' element={<TestTablePage/>}/>
           <Route path='/auth' element={<AuthPage/>}/>
           <Route path='/calendar' element={<CalendarComponent/>}/>
