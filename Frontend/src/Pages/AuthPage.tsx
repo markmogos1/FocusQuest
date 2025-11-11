@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
 type Profile = {
@@ -11,6 +12,9 @@ type Profile = {
 };
 
 const AuthPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from?.pathname || "/daily";
   const [mode, setMode] = useState<"signup" | "signin">("signup");
 
   const [email, setEmail] = useState("");
@@ -35,7 +39,7 @@ const AuthPage: React.FC = () => {
     
 
     // who is logged in?
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
+  const { data: userData } = await supabase.auth.getUser();
     
 
     const user = userData?.user ?? null;
@@ -70,7 +74,7 @@ const AuthPage: React.FC = () => {
     loadSessionAndProfile();
 
     const { data: sub } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, _session) => {
         
         // don't await here in a blocking way; just kick off reload
         loadSessionAndProfile();
@@ -128,6 +132,11 @@ const AuthPage: React.FC = () => {
 
       setMsg("Signup complete!");
       await loadSessionAndProfile();
+      // If session exists after signup, navigate to intended page
+      const { data: s } = await supabase.auth.getSession();
+      if (s.session) {
+        navigate(from, { replace: true });
+      }
     } catch (e: any) {
       console.error("[handleSignup] exception", e);
       setErr("Unexpected error during signup.");
@@ -147,7 +156,7 @@ const AuthPage: React.FC = () => {
     try
     {
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password: pw,
       });
@@ -160,6 +169,7 @@ const AuthPage: React.FC = () => {
 
       setMsg("Signed in!");
       await loadSessionAndProfile();
+      navigate(from, { replace: true });
     } catch (e: any) {
       console.error("[handleSignin] exception", e);
       setErr("Unexpected error during sign in.");
