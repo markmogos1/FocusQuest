@@ -7,9 +7,11 @@ import Navbar from './Components/NavBar'
 import DailyQuestPage from './Pages/DailyQuest'
 import TestTablePage from './Pages/TestDatabaseTable'
 import AuthPage from './Pages/AuthPage'
+import ProtectedRoute from './Components/ProtectedRoute'
 import CalendarComponent from './Pages/CalendarComponent'
 import Profile from './Pages/ProfilePage'
 import Shop from './Pages/Shop'
+import Equipment from './Pages/Equipment'
 
 function App() {
 
@@ -19,14 +21,29 @@ function App() {
         <Navbar/>
         <Routes>
           <Route path="/" element={<Home/>} />
-          <Route path="/tasks" element={<TaskList/>} />
+          <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <TaskList/>
+            </ProtectedRoute>
+          }
+        />
           <Route path='/about' element={<About/>} />
-          <Route path='/daily' element={<DailyQuestPage/>}/>
+          <Route
+          path='/daily'
+          element={
+            <ProtectedRoute>
+              <DailyQuestPage/>
+            </ProtectedRoute>
+          }
+        />
           <Route path='/shop' element={<Shop/>}/>
           <Route path='/test-table' element={<TestTablePage/>}/>
           <Route path='/auth' element={<AuthPage/>}/>
           <Route path='/calendar' element={<CalendarComponent/>}/>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/equipment" element={<Equipment />} />
         </Routes>
       </BrowserRouter>
     </>

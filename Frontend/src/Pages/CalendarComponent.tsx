@@ -1,7 +1,7 @@
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-
+import '../styles/calendar-theme.css';
 const localizer = momentLocalizer(moment);
 
 type MyEvent = { title: string; start: Date; end: Date };
@@ -21,7 +21,7 @@ export default function CalendarComponent() {
         <h1 className="text-2xl font-semibold mb-6">Calendar</h1>
 
         {/* Calendar wrapper */}
-        <div className="h-[70vh]"> 
+        <div className="h-[70vh] fq-calendar"> 
           <Calendar
             localizer={localizer}
             events={taskList}
