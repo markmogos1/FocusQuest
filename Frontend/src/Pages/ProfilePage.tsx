@@ -143,12 +143,23 @@ const Profile: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Avatar */}
-            <div className="flex items-center space-x-6 mb-8">
-              <div className="w-24 h-24 rounded-full bg-gray-300" />
-              <div>
-                <h2 className="text-2xl font-bold">{profile.name ?? "User Name"}</h2>
-                <p className="text-gray-600">{profile.level ?? "Level 1"}</p>
+            {/* Avatar + Gear */}
+            <div className="flex items-center justify-between mb-8">
+              {/* Avatar + Info */}
+              <div className="flex items-center space-x-4">
+                <div className="w-24 h-24 rounded-full bg-gray-300" />
+                <div>
+                  <h2 className="text-2xl font-bold">{profile.name ?? "User Name"}</h2>
+                  <p className="text-gray-600">{profile.level ?? "Level 1"}</p>
+                </div>
+              </div>
+
+              {/* View Gear */}
+              <div
+                onClick={() => navigate("/equipment")}
+                className="px-5 py-3 bg-amber-500 text-white rounded-lg shadow hover:bg-amber-600 transition cursor-pointer flex items-center justify-center text-base"
+              >
+                ⚔️ View Gear
               </div>
             </div>
 
@@ -207,15 +218,7 @@ const Profile: React.FC = () => {
                 </span>
                 <span>{formatDateForUI(joinDateISO)}</span>
               </div>
-              <div className="flex justify-between mb-6">
-                <button
-                  onClick={() => navigate("/tasks")}
-                  className="font-semibold bg-gray-200 px-5 py-2 h-[40px] rounded-full text-l shadow-lg hover:bg-amber-800 hover:text-white transition-all"
-                >
-                  ← Back to List
-                </button>
-
-                
+              <div className="flex justify-end">
                 <LogoutButton />
               </div>
             </div>

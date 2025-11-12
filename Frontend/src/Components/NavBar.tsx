@@ -48,6 +48,18 @@ const Navbar: React.FC = () => {
         >
           ☰
         </button>
+
+        {/* Profile Avatar */}
+        <button
+          onClick={() => navigate("/profile")}
+          className="absolute top-1.5 right-24 w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"
+        >
+          <img
+            src="https://assets.puzzlefactory.com/puzzle/254/191/original.webp"
+            alt="avatar"
+            className="w-10 h-10 rounded-full"
+          />
+        </button>
       </div>
     </nav>
   );

@@ -9,6 +9,7 @@ import TestTablePage from './Pages/TestDatabaseTable'
 import AuthPage from './Pages/AuthPage'
 import CalendarComponent from './Pages/CalendarComponent'
 import Profile from './Pages/ProfilePage'
+import Equipment from './Pages/Equipment'
 
 function App() {
 
@@ -25,6 +26,7 @@ function App() {
           <Route path='/auth' element={<AuthPage/>}/>
           <Route path='/calendar' element={<CalendarComponent/>}/>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/equipment" element={<Equipment />} />
         </Routes>
       </BrowserRouter>
     </>
