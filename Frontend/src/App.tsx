@@ -10,6 +10,7 @@ import AuthPage from './Pages/AuthPage'
 import ProtectedRoute from './Components/ProtectedRoute'
 import CalendarComponent from './Pages/CalendarComponent'
 import Profile from './Pages/ProfilePage'
+import Shop from './Pages/Shop'
 import Equipment from './Pages/Equipment'
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+          <Route path='/shop' element={<Shop/>}/>
           <Route path='/test-table' element={<TestTablePage/>}/>
           <Route path='/auth' element={<AuthPage/>}/>
           <Route path='/calendar' element={<CalendarComponent/>}/>
