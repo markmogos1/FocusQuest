@@ -1,18 +1,47 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { addXp, checkAndUpdateLevel } from '../lib/xp';
+
 
 interface Task {
   id: string;
   user_id: string;
   name: string;
+  completed?: boolean
   description: string | null;
   completed_at: string | null;
   difficulty: number | null;
   notes: string | null;
   rewards: string | null;
   created_at: string;
+  xp: number; // XP reward for completing this quest
 }
+
+async function questComplete(questXp: number): Promise<void> {
+  try{
+    const {data, error} = await supabase.auth.getUser()
+
+    if (error || !data?.user){
+      throw new Error('User not logged in')
+    }
+
+    const userId = data.user.id
+
+    const newXp = await addXp(userId, questXp)
+    
+    // Check and update level based on new XP
+    const { level, leveledUp } = await checkAndUpdateLevel(userId, newXp)
+    
+    if (leveledUp) {
+      console.log(`Level up! You are now level ${level}`)
+    }
+
+    console.log(`XP: ${newXp}, Level: ${level}`)
+     } catch (err) {
+    console.error('Failed to add XP:', (err as Error).message)
+    }
+  }
 
 const TaskList: React.FC = () => {
   const navigate = useNavigate();
@@ -101,6 +130,7 @@ const TaskList: React.FC = () => {
           user_id: user.id,
           name: newTask.trim(),
           completed_at: null,
+          xp: 25
         },
       ])
       .select()
@@ -136,10 +166,15 @@ const TaskList: React.FC = () => {
     } else {
       setTasks(
         tasks.map((t) =>
-          t.id === id ? { ...t, completed_at: newCompletedAt } : t
+          t.id === id ? { ...t, completed_at: newCompletedAt, completed: !t.completed} : t
+        
         )
       );
     }
+    if (!task.completed) {
+        await questComplete(task.xp);
+    }
+  
   };
 
   // Delete a task
