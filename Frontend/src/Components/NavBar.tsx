@@ -40,90 +40,101 @@ const Navbar: React.FC = () => {
   if (currentUser) {
     return (
       <nav className="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-sm shadow-sm z-50">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
+  <div className="w-full px-6 py-3 flex items-center">
           {/* Logo */}
           <span
             onClick={() => navigate("/")}
-            className="text-2xl font-bold text-amber-800 cursor-pointer"
+            className="text-2xl font-bold text-amber-800 cursor-pointer mr-4"
           >
             FocusQuest
           </span>
-        
-          {/* Links */}
-          <div className="hidden md:flex gap-x-8">
-            {loggedIn.map((link) => (
-              <button
-                key={link.name}
-                onClick={() => navigate(link.path)}
-                className={`text-lg font-medium transition-all ${
-                  location.pathname === link.path
-                    ? "text-amber-800 underline underline-offset-4"
-                    : "text-gray-700 hover:text-amber-800"
-                }`}
-              >
-                {link.name}
-              </button>
-            ))}
+
+          {/* spacer to push content to the right */}
+          <div className="flex-1" />
+
+          {/* Right-aligned links + controls */}
+          <div className="flex items-center gap-4">
+            {/* Links (hidden on small screens) */}
+            <div className="hidden md:flex gap-x-8 items-center">
+              {loggedIn.map((link) => (
+                <button
+                  key={link.name}
+                  onClick={() => navigate(link.path)}
+                  className={`text-lg font-medium transition-all ${
+                    location.pathname === link.path
+                      ? "text-amber-800 underline underline-offset-4"
+                      : "text-gray-700 hover:text-amber-800"
+                  }`}
+                >
+                  {link.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden text-amber-900 font-bold text-xl"
+              onClick={() => alert("Open menu (to implement later!)")}
+            >
+              ☰
+            </button>
+
+            {/* Profile Avatar */}
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"
+            >
+              <img
+                src="https://assets.puzzlefactory.com/puzzle/254/191/original.webp"
+                alt="avatar"
+                className="w-10 h-10 rounded-full"
+              />
+            </button>
           </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-amber-900 font-bold text-xl"
-            onClick={() => alert("Open menu (to implement later!)")}
-          >
-            ☰
-          </button>
-
-          {/* Profile Avatar */}
-          <button
-            onClick={() => navigate("/profile")}
-            className="absolute top-1.5 right-32 w-11.5 h-11.5 rounded-full bg-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"
-          >
-            <img
-              src="https://assets.puzzlefactory.com/puzzle/254/191/original.webp"
-              alt="avatar"
-              className="w-10 h-10 rounded-full"
-            />
-          </button>
         </div>
       </nav>
     );
   } else {
     return (
       <nav className="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-sm shadow-sm z-50">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
+  <div className="w-full px-6 py-3 flex items-center">
           {/* Logo */}
           <span
             onClick={() => navigate("/")}
-            className="text-2xl font-bold text-amber-800 cursor-pointer"
+            className="text-2xl font-bold text-amber-800 cursor-pointer mr-4"
           >
             FocusQuest
           </span>
-        
-          {/* Links */}
-          <div className="hidden md:flex gap-x-8">
-            {loggedOut.map((link) => (
-              <button
-                key={link.name}
-                onClick={() => navigate(link.path)}
-                className={`text-lg font-medium transition-all ${
-                  location.pathname === link.path
-                    ? "text-amber-800 underline underline-offset-4"
-                    : "text-gray-700 hover:text-amber-800"
-                }`}
-              >
-                {link.name}
-              </button>
-            ))}
-          </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-amber-900 font-bold text-xl"
-            onClick={() => alert("Open menu (to implement later!)")}
-          >
-            ☰
-          </button>
+          {/* spacer to push content to the right */}
+          <div className="flex-1" />
+
+          {/* Right-aligned links + controls (logged-out) */}
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex gap-x-8 items-center">
+              {loggedOut.map((link) => (
+                <button
+                  key={link.name}
+                  onClick={() => navigate(link.path)}
+                  className={`text-lg font-medium transition-all ${
+                    location.pathname === link.path
+                      ? "text-amber-800 underline underline-offset-4"
+                      : "text-gray-700 hover:text-amber-800"
+                  }`}
+                >
+                  {link.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden text-amber-900 font-bold text-xl"
+              onClick={() => alert("Open menu (to implement later!)")}
+            >
+              ☰
+            </button>
+          </div>
         </div>
       </nav>
     );
