@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { addXp } from '../lib/xp';
+import { addXp, checkAndUpdateLevel } from '../lib/xp';
 import { supabase } from '../lib/supabaseClient';
 
 // --- Types ---
@@ -23,8 +23,15 @@ async function questComplete(questXp: number): Promise<void> {
     const userId = data.user.id
 
     const newXp = await addXp(userId, questXp)
+    
+    // Check and update level based on new XP
+    const { level, leveledUp } = await checkAndUpdateLevel(userId, newXp)
+    
+    if (leveledUp) {
+      console.log(`Level up! You are now level ${level}`)
+    }
 
-    console.log(newXp)
+    console.log(`XP: ${newXp}, Level: ${level}`)
      } catch (err) {
     console.error('Failed to add XP:', (err as Error).message)
     }
