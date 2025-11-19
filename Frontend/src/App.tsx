@@ -19,7 +19,8 @@ function App() {
     <>
       <BrowserRouter>
         <Navbar/>
-        <Routes>
+        <div className="pt-16">
+          <Routes>
           <Route path="/" element={<Home/>} />
           <Route
           path="/tasks"
@@ -44,7 +45,8 @@ function App() {
           <Route path='/calendar' element={<CalendarComponent/>}/>
           <Route path="/profile" element={<Profile />} />
           <Route path="/equipment" element={<Equipment />} />
-        </Routes>
+          </Routes>
+        </div>
       </BrowserRouter>
     </>
   )

@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
-import { addXp, checkAndUpdateLevel } from '../lib/xp';
+import { addXp, addCurrency, checkAndUpdateLevel } from '../lib/xp';
+
+// local difficulty -> xp/dmg/gold map (keeps parity with DailyQuest)
+const DIFFICULTY_MAP: Record<number, { xp: number; dmg: number; gold: number }> = {
+  1: { xp: 8, dmg: 10, gold: 5 },
+  2: { xp: 15, dmg: 18, gold: 12 },
+  3: { xp: 28, dmg: 32, gold: 25 },
+  4: { xp: 45, dmg: 50, gold: 45 },
+}
 
 
 interface Task {
@@ -16,9 +24,11 @@ interface Task {
   rewards: string | null;
   created_at: string;
   xp: number; // XP reward for completing this quest
+  recurrence?: any | null;
+  next_due?: string | null;
 }
 
-async function questComplete(questXp: number): Promise<void> {
+async function questComplete(questXp: number, questGold?: number): Promise<void> {
   try{
     const {data, error} = await supabase.auth.getUser()
 
@@ -28,7 +38,7 @@ async function questComplete(questXp: number): Promise<void> {
 
     const userId = data.user.id
 
-    const newXp = await addXp(userId, questXp)
+  const newXp = await addXp(userId, questXp)
     
     // Check and update level based on new XP
     const { level, leveledUp } = await checkAndUpdateLevel(userId, newXp)
@@ -38,6 +48,15 @@ async function questComplete(questXp: number): Promise<void> {
     }
 
     console.log(`XP: ${newXp}, Level: ${level}`)
+    // award currency if requested
+    if (typeof questGold === 'number' && questGold !== 0) {
+      try {
+        const newBal = await addCurrency(userId, questGold)
+        console.log(`Currency awarded: ${questGold}, balance now ${newBal}`)
+      } catch (e) {
+        console.error('Failed to award currency:', e)
+      }
+    }
      } catch (err) {
     console.error('Failed to add XP:', (err as Error).message)
     }
@@ -171,9 +190,11 @@ const TaskList: React.FC = () => {
         )
       );
     }
-    if (!task.completed) {
-        await questComplete(task.xp);
-    }
+  if (!task.completed) {
+    const diff = task.difficulty || 1
+    const { gold } = DIFFICULTY_MAP[diff] || DIFFICULTY_MAP[1]
+    await questComplete(task.xp, gold);
+  }
   
   };
 
@@ -195,8 +216,8 @@ const TaskList: React.FC = () => {
   };
 
   return (
-    <section className="absolute inset-0 flex flex-col justify-center items-center text-center bg-gradient-to-br from-green-200 to-amber-400 overflow-hidden">
-      <div className="flex flex-col justify-center items-center gap-y-8 max-w-4xl w-full px-4">
+    <section className="min-h-dvh w-full flex flex-col justify-start items-center text-center bg-gradient-to-br from-green-200 to-amber-400 overflow-hidden pt-4 pb-12">
+      <div className="flex flex-col justify-start items-center gap-y-8 max-w-4xl w-full px-4">
         {/* Branding / Logo */}
         <span className="text-[26px] font-bold text-gray-800">
           FocusQuest
@@ -265,15 +286,60 @@ const TaskList: React.FC = () => {
                     onChange={() => toggleTask(task.id)}
                     className="w-6 h-6 text-amber-600 rounded border-2 border-gray-300 focus:ring-amber-500"
                   />
-                  <span
-                    className={`flex-1 text-left text-lg ${
-                      task.completed_at
-                        ? 'line-through text-gray-500'
-                        : 'text-gray-800'
-                    }`}
-                  >
-                    {task.name}
-                  </span>
+                      <div className="flex-1 text-left">
+                        <span
+                          className={`block text-lg ${task.completed_at ? 'line-through text-gray-500' : 'text-gray-800'}`}
+                        >
+                          {task.name}
+                        </span>
+                        {/* Recurrence / repeats info */}
+                        {(() => {
+                          try {
+                            const rec = typeof task.recurrence === 'string' && task.recurrence ? JSON.parse(task.recurrence) : task.recurrence;
+                            if (!rec) return null;
+                            if (rec.type === 'one-time') {
+                              const dateStr = task.next_due ? new Date(task.next_due).toLocaleDateString() : null;
+                              return <div className="text-sm text-gray-500 mt-1">One-time{dateStr ? ` — due ${dateStr}` : ''}</div>;
+                            }
+                            if (rec.type === 'daily') {
+                              return <div className="text-sm text-gray-500 mt-1">Repeats daily{rec.count ? ` — ${rec.count}×` : ' — indefinitely'}</div>;
+                            }
+                            if (rec.type === 'every_n_days') {
+                              return <div className="text-sm text-gray-500 mt-1">Repeats every {rec.interval || 1} day(s){rec.count ? ` — ${rec.count}×` : ' — indefinitely'}</div>;
+                            }
+                            if (rec.type === 'weekly') {
+                              // rec.byweekday uses 0 (Sun) - 6 (Sat) per our recurrence.ts
+                              const weekdayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+                              let daysStr = ''
+                              try {
+                                if (Array.isArray(rec.byweekday)) {
+                                  daysStr = (rec.byweekday as any[])
+                                    .map((d) => {
+                                      if (typeof d === 'number') return weekdayNames[d] || String(d)
+                                      // handle strings like 'MO' or 'Tue'
+                                      if (typeof d === 'string') {
+                                        // try to map common two-letter forms
+                                        const upper = d.toUpperCase()
+                                        const map: Record<string, string> = { MO: 'Mon', TU: 'Tue', TUe: 'Tue', WE: 'Wed', TH: 'Thu', FR: 'Fri', SA: 'Sat', SU: 'Sun' }
+                                        if (map[upper.slice(0,2)]) return map[upper.slice(0,2)]
+                                        return d
+                                      }
+                                      return String(d)
+                                    })
+                                    .join('/')
+                                }
+                              } catch (e) {
+                                daysStr = ''
+                              }
+                              return <div className="text-sm text-gray-500 mt-1">Repeats weekly{daysStr ? ` — ${daysStr}` : ''}{rec.count ? ` — ${rec.count}×` : ''}</div>;
+                            }
+                            // fallback
+                            return <div className="text-sm text-gray-500 mt-1">Repeats{rec.count ? ` — ${rec.count}×` : ' — indefinitely'}</div>;
+                          } catch (e) {
+                            return null;
+                          }
+                        })()}
+                      </div>
                   <button
                     onClick={() => deleteTask(task.id)}
                     className="text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded"

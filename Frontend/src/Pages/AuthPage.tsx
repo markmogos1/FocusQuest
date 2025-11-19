@@ -22,8 +22,7 @@ const AuthPage: React.FC = () => {
 
   // extra signup fields
   const [displayName, setDisplayName] = useState("");
-  const [birthday, setBirthday] = useState("");
-  const [avatar, setAvatar] = useState("🧙‍♂️");
+  // removed birthday/avatar from signup per UX request
 
   // session / profile state
   const [supabaseUser, setSupabaseUser] = useState<any>(null);
@@ -118,9 +117,8 @@ const AuthPage: React.FC = () => {
       const { error: pErr } = await supabase.from("profiles").insert({
         id: user.id, // uuid PK
         name: displayName || email,
-        birthday: birthday || null,
         level: 1,
-        avatar: avatar || "🧙‍♂️",
+        // birthday and avatar are no longer collected at signup
       });
       
 
@@ -370,31 +368,7 @@ const AuthPage: React.FC = () => {
                     />
                   </div>
 
-                  {/* birthday */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Birthday
-                    </label>
-                    <input
-                      type="date"
-                      value={birthday}
-                      onChange={(e) => setBirthday(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 shadow-inner outline-none focus:ring-2 focus:ring-emerald-400"
-                    />
-                  </div>
-
-                  {/* avatar */}
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Avatar (emoji or URL)
-                    </label>
-                    <input
-                      value={avatar}
-                      onChange={(e) => setAvatar(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 shadow-inner outline-none focus:ring-2 focus:ring-emerald-400"
-                      placeholder="🧙‍♂️"
-                    />
-                  </div>
+                  {/* birthday and avatar inputs removed per request */}
                 </>
               )}
 

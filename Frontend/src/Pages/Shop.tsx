@@ -1,9 +1,35 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
+import { getCurrency } from "../lib/xp";
 
 const Shop: React.FC = () => {
   const navigate = useNavigate();
-  const gold = 0; // Set to 0 for now
+  const [gold, setGold] = useState<number | null>(null);
+  const [loadingGold, setLoadingGold] = useState(false);
+
+  const fetchGold = async () => {
+    setLoadingGold(true);
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data?.user) {
+        setGold(0);
+        return;
+      }
+      const userId = data.user.id;
+      const balance = await getCurrency(userId);
+      setGold(balance);
+    } catch (e) {
+      console.error('Failed to fetch currency', e);
+      setGold(0);
+    } finally {
+      setLoadingGold(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchGold();
+  }, []);
 
   // Sample "coming soon" shop items
   const shopItems = [
@@ -18,8 +44,8 @@ const Shop: React.FC = () => {
   ];
 
   return (
-    <section className="absolute inset-0 flex flex-col justify-center items-center text-center bg-gradient-to-br from-green-200 to-amber-400 overflow-hidden">
-      <div className="flex flex-col justify-center items-center gap-y-8 max-w-6xl w-full px-4 py-20">
+    <section className="min-h-dvh w-full flex flex-col justify-start items-center text-center bg-gradient-to-br from-green-200 to-amber-400 overflow-hidden pb-12">
+      <div className="flex flex-col justify-start items-center gap-y-8 max-w-6xl w-full px-4 py-6">
         {/* Branding / Logo */}
         <span className="text-[26px] font-bold text-gray-800">
           FocusQuest
